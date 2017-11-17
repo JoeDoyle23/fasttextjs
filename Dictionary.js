@@ -1,3 +1,5 @@
+// @ts-check
+
 const MAX_VOCAB_SIZE = 30000000;
 const MAX_LINE_SIZE = 1024;
 const EOS = "</s>";
@@ -94,13 +96,15 @@ class Dictionary {
   computeSubwords(word, ngrams) {
     for (let i = 0; i < word.length; i++) {
       let ngram;
-      if ((word[i] & 0xC0) == 0x80) continue;
+      if ((word.charCodeAt(i) & 0xC0) == 0x80) continue;
       
       for (let j = i, n = 1; j < word.length && n <= this.args.maxn; n++) {
         ngram.push(word[j++]);
-        while (j < word.length && (word[j] & 0xC0) == 0x80) {
+
+        while (j < word.length && (word.charCodeAt(j) & 0xC0) == 0x80) {
           ngram.push(word[j++]);
         }
+
         if (n >= this.args.minn && !(n == 1 && (i == 0 || j == word.length))) {
           let h = this.hash(ngram) % this.args.bucket;
           this.pushHash(ngrams, h);
@@ -174,15 +178,19 @@ class Dictionary {
     return w.startsWith(this.args.label) ? this.entry_type.label : this.entry_type.word;
   }
 
+  getSubwordsById(id) {
+    return this.words[id].subwords;
+  }
+
   addSubwords(line, token, wid) {
     if (wid < 0) { // out of vocab
-      computeSubwords(BOW + token + EOW, line);
+     this.computeSubwords(BOW + token + EOW, line);
     } else {
-      if (args_->maxn <= 0) { // in vocab w/o subwords
-        line.push_back(wid);
+      if (this.args.maxn <= 0) { // in vocab w/o subwords
+        line.push(wid);
       } else { // in vocab w/ subwords
-        const std::vector<int32_t>& ngrams = getSubwords(wid);
-        line.insert(line.end(), ngrams.cbegin(), ngrams.cend());
+        let ngrams = this.getSubwordsById(wid);
+        line.concat(ngrams);
       }
     }
   }

@@ -1,10 +1,22 @@
+// @ts-check
+
 const Args = require('./Args');
 const Dictionary = require('./Dictionary');
+const Matrix = require('./Matrix');
 const QMatrix = require('./QMatrix');
 const Model = require('./Model');
 const FtzReader = require('./FtzReader');
 
 class FastText {
+  constructor () {
+    this.quant = false;
+  }
+
+  /**
+   * 
+   * @param {String} modelPath 
+   * @param {function} callback 
+   */
   loadModel(modelPath, callback) {
     this.ftzReader = new FtzReader(modelPath);
 
@@ -28,7 +40,7 @@ class FastText {
         this.qoutput.load(this.ftzReader);
       }
 
-      this.model = new Model(null, null, this.args, 0);
+      this.model = new Model(new Matrix(), new Matrix(), this.args, 0);
       this.model.quant = this.quant;
       this.model.setQuantizePointer(this.qinput, this.qoutput, this.args.qout);
 
@@ -42,7 +54,13 @@ class FastText {
     });
   }
 
-  predict(inputText, k, includeProb) {
+  /**
+   * 
+   * @param {String} inputText 
+   * @param {Number} k 
+   * @param {Number} numResults 
+   */
+  predict(inputText, k, numResults) {
     this.predictions = [];
 
     let words = [];

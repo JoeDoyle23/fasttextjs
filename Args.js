@@ -1,3 +1,5 @@
+// @ts-check
+
 class Args {
   constructor() {
     this.model_name = {
@@ -39,6 +41,11 @@ class Args {
     this.cutoff = 0;
     this.dsub = 2;
   }
+
+  /**
+   * 
+   * @param {FtzReader} ftzReader 
+   */
   load(ftzReader) {
     this.dim = ftzReader.readInt32();
     this.ws = ftzReader.readInt32();
