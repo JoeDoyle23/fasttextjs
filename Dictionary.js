@@ -7,6 +7,10 @@ const BOW = "<";
 const EOW = ">";
 
 class Dictionary {
+  /**
+   * 
+   * @param {Args} args 
+   */
   constructor(args) {
     this.entry_type = {
       word: 0,
@@ -20,6 +24,10 @@ class Dictionary {
     this.pdiscard = [];
   }
 
+  /**
+   * 
+   * @param {FtzReader} ftzReader 
+   */
   load(ftzReader) {
     this.size = ftzReader.readInt32();
     this.nwords = ftzReader.readInt32();
@@ -54,6 +62,10 @@ class Dictionary {
     this.initNgrams();
   }
 
+  /**
+   * 
+   * @param {String} word 
+   */
   hash (word) {
     let h = 2166136261;
     for (let i = 0; i < word.length; i++) {
@@ -63,6 +75,11 @@ class Dictionary {
     return h;
   }
 
+  /**
+   * 
+   * @param {String} word 
+   * @param {Number} hash 
+   */
   find (word, hash) {
     if (!hash) {
       hash = this.hash(word);
@@ -93,6 +110,11 @@ class Dictionary {
     }
   }
 
+  /**
+   * 
+   * @param {String} word 
+   * @param {Array} ngrams 
+   */
   computeSubwords(word, ngrams) {
     for (let i = 0; i < word.length; i++) {
       let ngram;
@@ -113,6 +135,11 @@ class Dictionary {
     }
   }
 
+  /**
+   * 
+   * @param {Array} hashes 
+   * @param {Number} id 
+   */
   pushHash(hashes, id) {
     if (this.pruneidx_size == 0 || id < 0) return;
     if (this.pruneidx_size > 0) {
@@ -125,6 +152,10 @@ class Dictionary {
     hashes.push(this.nwords + id);
   }
 
+  /**
+   * 
+   * @param {Number} w 
+   */
   getId(w) {
     let h = find(w);
     return this.word2int[h];
