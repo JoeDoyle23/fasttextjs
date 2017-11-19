@@ -1,5 +1,3 @@
-// @ts-check
-
 const SIGMOID_TABLE_SIZE = 512;
 const MAX_SIGMOID = 8;
 const LOG_TABLE_SIZE = 512;
@@ -21,8 +19,19 @@ class Model {
     this.negpos = 0;
     this.loss = 0.0;
     this.nexamples = 1;
+    this.quant = false;
+
+    this.tree = [];
+    // struct Node {
+    //   int32_t parent;
+    //   int32_t left;
+    //   int32_t right;
+    //   int64_t count;
+    //   bool binary;
+    // };
 
     this.negatives = [];
+    this.t_sigmoid = [];
 
     this.initSigmoid();
     this.initLog();
@@ -85,6 +94,10 @@ class Model {
     this.shuffle(negatives);
   }
 
+  /**
+   * 
+   * @param {Array} a 
+   */
   shuffle(a) {
     let j, x, i;
     for (i = a.length - 1; i > 0; i--) {
@@ -97,14 +110,14 @@ class Model {
 
   /**
    * 
-   * @param {*} input 
-   * @param {*} k 
-   * @param {*} heap 
-   * @param {*} hidden 
-   * @param {*} output 
+   * @param {Array} input 
+   * @param {Number} k 
+   * @param {Map} heap 
+   * @param {Vector} hidden 
+   * @param {Vector} output 
    */
   predict(input, k, heap, hidden, output) {
-    heap.reserve(k + 1);
+    // heap.reserve(k + 1);
 
     this.computeHidden(input, hidden);
 
@@ -114,11 +127,11 @@ class Model {
       this.findKBest(k, heap, hidden, output);
     }
 
-    std::sort_heap(heap.begin(), heap.end(), comparePairs);
+    //std::sort_heap(heap.begin(), heap.end(), comparePairs);
   }
 
   computeHidden(input, hidden) {
-    hidden.zero();
+    hidden.data.fill(0);
 
     for (let it = input.cbegin(); it != input.cend(); ++it) {
       if(this.quant) {
@@ -131,18 +144,23 @@ class Model {
     hidden.mul(1.0 / input.length);
   }
 
+  comparePairs(left, right) {
+    return left.first > right.first;
+  }
+
   dfs(k, node, score, heap, hidden) {
     if (heap.size() == k && score < heap.front().first) {
       return;
     }
 
     if (tree[node].left == -1 && tree[node].right == -1) {
-      heap.push_back(std::make_pair(score, node));
-      std::push_heap(heap.begin(), heap.end(), comparePairs);
-      
+      heap.insert({
+        first: score,
+        second: node
+      }, score);
+
       if (heap.size() > k) {
-        std::pop_heap(heap.begin(), heap.end(), comparePairs);
-        heap.pop_back();
+        heap.remove();
       }
       return;
     }
@@ -161,20 +179,27 @@ class Model {
   findKBest(k, heap, hidden, output) {
     this.computeOutputSoftmax(hidden, output);
     for (let i = 0; i < this.osz; i++) {
-      if (heap.size() == k && Math.log(output[i]) < heap.front().first) {
+      let iLog = Math.log(output[i]);
+      if (heap.size() == k && iLog < heap.front().first) {
         continue;
       }
 
-      heap.push_back(std::make_pair(Math.log(output[i]), i));
-      std::push_heap(heap.begin(), heap.end(), comparePairs);
-      
+      heap.insert({
+        first: iLog,
+        second: i
+      }, iLog);
+        
       if (heap.size() > k) {
-        std::pop_heap(heap.begin(), heap.end(), comparePairs);
-        heap.pop_back();
+        heap.remove();
       }
     }
   }
 
+  /**
+   * 
+   * @param {Vector} hidden 
+   * @param {Vector} output 
+   */
   computeOutputSoftmax(hidden, output) {
     if (this.quant && this.args.qout) {
       output.mul(this.qwo, hidden);
@@ -182,19 +207,38 @@ class Model {
       output.mul(this.wo, hidden);
     }
 
-    let max = output[0], z = 0.0;
+    let max = output.data[0];
+    let z = 0.0;
+
     for (let i = 0; i < this.osz; i++) {
-      max = Math.max(output[i], max);
+      max = Math.max(output.data[i], max);
     }
 
     for (let i = 0; i < this.osz; i++) {
-      output[i] = Math.exp(output[i] - max);
-      z += output[i];
+      output.data[i] = Math.exp(output.data[i] - max);
+      z += output.data[i];
     }
 
     for (let i = 0; i < this.osz; i++) {
-      output[i] /= z;
+      output.data[i] /= z;
     }
+  }
+  
+  /**
+   * 
+   * @param {Number} x 
+   */
+  sigmoid(x) {
+    if (x < -MAX_SIGMOID) {
+      return 0.0;
+    } 
+    
+    if (x > MAX_SIGMOID) {
+      return 1.0;
+    }
+
+    let i = (x + MAX_SIGMOID) * SIGMOID_TABLE_SIZE / MAX_SIGMOID / 2;
+    return this.t_sigmoid[i];
   }
 }
 

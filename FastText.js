@@ -1,10 +1,10 @@
-// @ts-check
-
 const Args = require('./Args');
 const Dictionary = require('./Dictionary');
 const Matrix = require('./Matrix');
 const QMatrix = require('./QMatrix');
 const Model = require('./Model');
+const PriorityQueue = require('./PriorityQueue');
+const Vector = require('./Vector');
 const FtzReader = require('./FtzReader');
 
 class FastText {
@@ -49,7 +49,7 @@ class FastText {
       } else {
         this.model.setTargetCounts(this.dictionary.getCounts(this.dictionary.entry_type.word));
       }
-      console.log(this.args);
+
       callback();
     });
   }
@@ -72,16 +72,20 @@ class FastText {
 
     if (words.length === 0) return;
 
-    let hidden = new Map(this.args.dim);
-    let output = new Map(this.dictionary.nlabels);
-    let modelPredictions = new Map();;
+    let hidden = new Vector(this.args.dim);
+    let output = new Vector(this.dictionary.nlabels);
+    let modelPredictions = new PriorityQueue();
 
     this.model.predict(words, k, modelPredictions, hidden, output);
-    for (auto it = modelPredictions.cbegin(); it != modelPredictions.cend(); it++) {
-      predictions.push_back(std::make_pair(it->first, dict_->getLabel(it->second)));
-    }
+
+    modelPredictions.forEach((pred) => {
+      this.predictions.push({
+        a: pred.first,
+        label: this.dictionary.getLabel(pred.second)
+      });
+    })
     
-    return predictions;
+    return this.predictions;
   }
 }
 

@@ -1,5 +1,3 @@
-// @ts-check
-
 const MAX_VOCAB_SIZE = 30000000;
 const MAX_LINE_SIZE = 1024;
 const EOS = "</s>";
@@ -19,7 +17,8 @@ class Dictionary {
 
     this.args = args;
     this.words = [];
-    this.word2int = new Map();
+    this.word2int = new Int32Array(MAX_VOCAB_SIZE);
+    this.word2int.fill(-1);
     this.pruneidx = new Map();
     this.pdiscard = [];
   }
@@ -49,7 +48,9 @@ class Dictionary {
       e.type = ftzReader.readUInt8();
 
       this.words.push(e);
-      this.word2int.set(this.find(e.word), i);
+      let f = this.find(e.word);
+      console.log(f);
+      this.word2int[f] = i;
     }
 
     for (let i = 0; i < this.pruneidx_size; i++) {
@@ -67,12 +68,14 @@ class Dictionary {
    * @param {String} word 
    */
   hash (word) {
-    let h = 2166136261;
+    let h = new Uint32Array(1);
+    h[0] = 2166136261;
     for (let i = 0; i < word.length; i++) {
-      h = h ^ word.charCodeAt(i);
-      h = h * 16777619;
+      h[0] = (h[0] ^ word.charCodeAt(i)) >>> 0;
+      h[0] = (h[0] * 16777619) >>> 0;
     }
-    return h;
+
+    return h[0];
   }
 
   /**
@@ -81,12 +84,18 @@ class Dictionary {
    * @param {Number} hash 
    */
   find (word, hash) {
+    console.log(word);
     if (!hash) {
       hash = this.hash(word);
     }
 
     let id = hash % MAX_VOCAB_SIZE;
-    while (this.word2int.has(id) && this.words[this.word2int.get(id)].word != word) {
+
+    console.log('find id: ', id);
+    console.log(this.word2int[id]);
+
+
+    while (this.word2int[id] !== -1 && this.words[this.word2int[id]] && this.words[this.word2int[id]].word !== word) {
       id = (id + 1) % MAX_VOCAB_SIZE;
     }
     return id;
@@ -155,12 +164,19 @@ class Dictionary {
   /**
    * 
    * @param {Number} w 
+   * @param {Number} h 
    */
-  getId(w) {
-    let h = find(w);
+  getId(w, h) {
+    if (!h) {
+      h = this.hash(w);
+    }
     return this.word2int[h];
   }
 
+  /**
+   * 
+   * @param {Number} entry_type 
+   */
   getCounts(entry_type) {
     const counts = [];
     this.words.forEach((w) => {
@@ -172,6 +188,12 @@ class Dictionary {
     return counts;
   }
 
+  /**
+   * 
+   * @param {String} inputText 
+   * @param {Array} words 
+   * @param {Array} labels 
+   */
   getLine(inputText, words, labels) {
     let word_hashes = [];
     let token;
@@ -180,11 +202,12 @@ class Dictionary {
     words.length = 0;
     labels.length = 0;
 
-    words.concat(inputText.split(' '));
+    words.push(...inputText.split(' '));
 
     words.forEach((token) => {
       let h = this.hash(token);
       let wid = this.getId(token, h);
+      console.log(wid);
       let entry_type = wid < 0 ? this.getTypeByToken(token) : this.getTypeById(wid);
 
       ntokens++;
@@ -197,22 +220,48 @@ class Dictionary {
       }
     });
 
-    addWordNgrams(words, word_hashes, this.args.wordNgrams);
+    this.addWordNgrams(words, word_hashes, this.args.wordNgrams);
     return ntokens;
   }
 
+  /**
+   * 
+   * @param {Number} id 
+   */
   getTypeById(id) {
     return this.words[id].type;
   }
   
+  /**
+   * 
+   * @param {String} w 
+   */
   getTypeByToken(w) {
     return w.startsWith(this.args.label) ? this.entry_type.label : this.entry_type.word;
   }
 
+  /**
+   * 
+   * @param {Number} id 
+   */
   getSubwordsById(id) {
     return this.words[id].subwords;
   }
 
+  /**
+   * 
+   * @param {Number} lid 
+   */
+  getLabel(lid) {
+    return this.words[lid + this.nwords].word;
+  }
+
+  /**
+   * 
+   * @param {Array} line 
+   * @param {String} token 
+   * @param {NUmber} wid 
+   */
   addSubwords(line, token, wid) {
     if (wid < 0) { // out of vocab
      this.computeSubwords(BOW + token + EOW, line);
@@ -221,7 +270,17 @@ class Dictionary {
         line.push(wid);
       } else { // in vocab w/ subwords
         let ngrams = this.getSubwordsById(wid);
-        line.concat(ngrams);
+        line.push(...ngrams);
+      }
+    }
+  }
+ 
+  addWordNgrams(line, hashes, n) {
+    for (let i = 0; i < hashes.length; i++) {
+      let h = hashes[i];
+      for (let j = i + 1; j < hashes.length && j < i + n; j++) {
+        h = h * 116049371 + hashes[j];
+        this.pushHash(line, h % this.args.bucket);
       }
     }
   }

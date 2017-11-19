@@ -1,5 +1,3 @@
-// @ts-check
-
 class ProductQuantizer {
   constructor() {
     this.nbits = 8;
@@ -13,7 +11,7 @@ class ProductQuantizer {
 
   /**
    * 
-   * @param {FtZReader} ftzReader 
+   * @param {FtzReader} ftzReader 
    */
   load(ftzReader) {
     this.dim = ftzReader.readInt32();

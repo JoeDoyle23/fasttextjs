@@ -1,5 +1,3 @@
- // @ts-check
- 
 const ProductQuantizer = require('./ProductQuantizer');
 
 class QMatrix {
@@ -8,6 +6,9 @@ class QMatrix {
     this.m = 0;
     this.n = 0;
     this.codesize = 0;
+
+    this.pq = new ProductQuantizer();
+    this.npq = new ProductQuantizer();
   }
 
   /**
@@ -20,12 +21,10 @@ class QMatrix {
     this.n = ftzReader.readInt64();
     this.codesize = ftzReader.readInt32();
     this.codes = ftzReader.readUInt8TypedArray(this.codesize);
-    this.pq = new ProductQuantizer();
     this.pq.load(ftzReader);
 
     if (this.qnorm) {
       this.norm_codes = ftzReader.readUInt8TypedArray(this.m);
-      this.npq = new ProductQuantizer();
       this.npq.load(ftzReader);
       }
   }

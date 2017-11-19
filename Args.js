@@ -1,5 +1,3 @@
-// @ts-check
-
 class Args {
   constructor() {
     this.model_name = {
