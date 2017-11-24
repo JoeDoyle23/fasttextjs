@@ -49,7 +49,6 @@ class Dictionary {
 
       this.words.push(e);
       let f = this.find(e.word);
-      console.log(f);
       this.word2int[f] = i;
     }
 
@@ -68,14 +67,13 @@ class Dictionary {
    * @param {String} word 
    */
   hash (word) {
-    let h = new Uint32Array(1);
-    h[0] = 2166136261;
+    let h = 0x811c9dc5;
     for (let i = 0; i < word.length; i++) {
-      h[0] = (h[0] ^ word.charCodeAt(i)) >>> 0;
-      h[0] = (h[0] * 16777619) >>> 0;
+      h ^= word.charCodeAt(i);
+      h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
     }
 
-    return h[0];
+    return h >>> 0;
   }
 
   /**
@@ -84,16 +82,11 @@ class Dictionary {
    * @param {Number} hash 
    */
   find (word, hash) {
-    console.log(word);
     if (!hash) {
       hash = this.hash(word);
     }
 
     let id = hash % MAX_VOCAB_SIZE;
-
-    console.log('find id: ', id);
-    console.log(this.word2int[id]);
-
 
     while (this.word2int[id] !== -1 && this.words[this.word2int[id]] && this.words[this.word2int[id]].word !== word) {
       id = (id + 1) % MAX_VOCAB_SIZE;
@@ -207,7 +200,6 @@ class Dictionary {
     words.forEach((token) => {
       let h = this.hash(token);
       let wid = this.getId(token, h);
-      console.log(wid);
       let entry_type = wid < 0 ? this.getTypeByToken(token) : this.getTypeById(wid);
 
       ntokens++;
