@@ -51,6 +51,20 @@ class QMatrix {
 
     return this.pq.mulcode(vec, this.codes, i, norm);
   }
+
+  /**
+   * 
+   * @param {Vector} x 
+   * @param {Number} t 
+   */
+  addToVector(x, t) {
+    let norm = 1;
+    if (this.qnorm) {
+      norm = this.npq.get_centroids(0, this.norm_codes[t])[0];
+    }
+
+    this.pq.addcode(x, this.codes, t, norm);
+  }
 }
 
 module.exports = QMatrix;

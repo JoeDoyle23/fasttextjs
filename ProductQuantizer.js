@@ -29,10 +29,10 @@ class ProductQuantizer {
    */
   get_centroids(m, i) {
     if (m == this.nsubq - 1) {
-      return this.centroids[m * this.ksub * this.dsub + i * this.lastdsub];
+      return this.centroids.subarray(m * this.ksub * this.dsub + i * this.lastdsub);
     }
 
-    return this.centroids[(m * this.ksub + i) * this.dsub];
+    return this.centroids.subarray((m * this.ksub + i) * this.dsub);
   }
 
   /**
@@ -60,6 +60,29 @@ class ProductQuantizer {
     }
 
     return res * alpha;
+  }
+
+  /**
+   * 
+   * @param {Vector} x 
+   * @param {Array} codes
+   * @param {Number} t 
+   * @param {Number} alpha
+   */
+  addcode(x, codes, t, alpha) {
+    let d = this.dsub;
+    let offset = this.nsubq * t;
+    for (let m = 0; m < this.nsubq; m++) {
+      let c = this.get_centroids(m, codes[m + offset]);
+
+      if (m == this.nsubq - 1) {
+        d = this.lastdsub;
+      }
+
+      for(let n = 0; n < d; n++) {
+        x.data[m * this.dsub + n] += alpha * c[n];
+      }
+    }
   }
 }
 

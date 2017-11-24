@@ -22,16 +22,10 @@ class Model {
     this.quant = false;
 
     this.tree = [];
-    // struct Node {
-    //   int32_t parent;
-    //   int32_t left;
-    //   int32_t right;
-    //   int64_t count;
-    //   bool binary;
-    // };
 
     this.negatives = [];
-    this.t_sigmoid = [];
+    this.t_sigmoid = new Float32Array(SIGMOID_TABLE_SIZE + 1);
+    this.t_log = new Float32Array(LOG_TABLE_SIZE + 1);
 
     this.initSigmoid();
     this.initLog();
@@ -52,8 +46,6 @@ class Model {
   }
 
   initSigmoid() {
-    this.t_sigmoid = [];
-
     for (let i = 0; i < SIGMOID_TABLE_SIZE + 1; i++) {
       let x = (i * 2 * MAX_SIGMOID) / SIGMOID_TABLE_SIZE - MAX_SIGMOID;
       this.t_sigmoid[i] = 1.0 / (1.0 + Math.exp(-x));
@@ -61,7 +53,6 @@ class Model {
   }
 
   initLog() {
-    this.t_log = [];
     for (let i = 0; i < LOG_TABLE_SIZE + 1; i++) {
       let x = (i + 1e-5) / LOG_TABLE_SIZE;
       this.t_log[i] = Math.log(x);
@@ -117,8 +108,6 @@ class Model {
    * @param {Vector} output 
    */
   predict(input, k, heap, hidden, output) {
-    // heap.reserve(k + 1);
-
     this.computeHidden(input, hidden);
 
     if (this.args.loss == this.args.loss_name.hs) {
@@ -130,18 +119,23 @@ class Model {
     //std::sort_heap(heap.begin(), heap.end(), comparePairs);
   }
 
+  /**
+   * 
+   * @param {Array} input 
+   * @param {Vector} hidden 
+   */
   computeHidden(input, hidden) {
     hidden.data.fill(0);
 
-    for (let it = input.cbegin(); it != input.cend(); ++it) {
+    input.forEach((it) => {
       if(this.quant) {
-        hidden.addRow(this.qwi, it);
+        hidden.addRowByQMatrix(this.qwi, it);
       } else {
-        hidden.addRow(this.wi, it);
+        hidden.addRowByMatrix(this.wi, it);
       }
-    }
+    });
     
-    hidden.mul(1.0 / input.length);
+    hidden.mulByNum(1.0 / input.length);
   }
 
   comparePairs(left, right) {
@@ -149,6 +143,8 @@ class Model {
   }
 
   dfs(k, node, score, heap, hidden) {
+    console.log('dfs');
+    
     if (heap.size() == k && score < heap.front().first) {
       return;
     }
@@ -176,10 +172,20 @@ class Model {
     this.dfs(k, tree[node].right, score + Math.log(f), heap, hidden);
   }
 
+  /**
+   * 
+   * @param {Number} k 
+   * @param {PriorityQueue} heap 
+   * @param {Vector} hidden 
+   * @param {Vector} output 
+   */
   findKBest(k, heap, hidden, output) {
+    console.log('findKBest');
     this.computeOutputSoftmax(hidden, output);
     for (let i = 0; i < this.osz; i++) {
-      let iLog = Math.log(output[i]);
+      console.log(output.data[i]);
+      let iLog = Math.log(output.data[i]);
+
       if (heap.size() == k && iLog < heap.front().first) {
         continue;
       }
@@ -202,9 +208,9 @@ class Model {
    */
   computeOutputSoftmax(hidden, output) {
     if (this.quant && this.args.qout) {
-      output.mul(this.qwo, hidden);
+      output.mulByQMatrix(this.qwo, hidden);
     } else {
-      output.mul(this.wo, hidden);
+      output.mulByMatrix(this.wo, hidden);
     }
 
     let max = output.data[0];

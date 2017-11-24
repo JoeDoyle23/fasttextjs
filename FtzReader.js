@@ -35,6 +35,18 @@ class FtzReader {
     return value;
   }
 
+  readUint32() {
+    const value = this.buffer.readUInt32LE(this.position);
+    this.position+=4;
+    return value;
+  }
+
+  readFloat() {
+    const value = this.buffer.readFloatLE(this.position);
+    this.position+=4;
+    return value;
+  }
+
   readInt64() {
     let low = this.readInt32();
     let high = this.readInt32();
@@ -69,11 +81,21 @@ class FtzReader {
   }
 
   readUInt32TypedArray(length) {
-    const data = new Uint8Array(length * 4);
-    this.buffer.copy(data, 0, this.position, this.position + length * 4);
-    this.position+=length * 4;
+    const output = new Uint32Array(length);
+    for (let i = 0; i < length; i++) {
+      output[i] = this.readUint32();
+    }
 
-    return new Uint32Array(data);
+    return output;
+  }
+
+  readFloat32TypedArray(length) {
+    const output = new Float32Array(length);
+    for (let i = 0; i < length; i++) {
+      output[i] = this.readFloat();
+    }
+
+    return output;
   }
 }
 

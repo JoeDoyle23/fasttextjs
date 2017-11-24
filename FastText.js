@@ -9,6 +9,11 @@ const FtzReader = require('./FtzReader');
 
 class FastText {
   constructor () {
+    this.input = new Matrix();
+    this.output = new Matrix();
+    this.qinput = new QMatrix();
+    this.qoutput = new QMatrix();
+    
     this.quant = false;
   }
 
@@ -30,17 +35,20 @@ class FastText {
       this.quant = !!this.ftzReader.readUInt8();
 
       if (this.quant) {
-        this.qinput = new QMatrix();
         this.qinput.load(this.ftzReader);
+      } else {
+        this.input.load(this.ftzReader);
       }
 
       this.args.qout = !!this.ftzReader.readUInt8();
       if (this.quant && this.args.qout) {
-        this.qoutput = new QMatrix();
         this.qoutput.load(this.ftzReader);
+      } else {
+        this.output.load(this.ftzReader);
       }
 
-      this.model = new Model(new Matrix(), new Matrix(), this.args, 0);
+      console.log(this.output.data);
+      this.model = new Model(this.input, this.output, this.args, 0);
       this.model.quant = this.quant;
       this.model.setQuantizePointer(this.qinput, this.qoutput, this.args.qout);
 
@@ -78,12 +86,13 @@ class FastText {
 
     this.model.predict(words, k, modelPredictions, hidden, output);
 
-    modelPredictions.forEach((pred) => {
-      this.predictions.push({
-        a: pred.first,
-        label: this.dictionary.getLabel(pred.second)
-      });
-    })
+    console.log(modelPredictions.heap);
+    // modelPredictions.forEach((pred) => {
+    //   this.predictions.push({
+    //     a: pred.first,
+    //     label: this.dictionary.getLabel(pred.second)
+    //   });
+    // })
     
     return this.predictions;
   }

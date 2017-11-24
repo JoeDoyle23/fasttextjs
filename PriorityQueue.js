@@ -9,7 +9,7 @@ class Node {
 
 class PriorityQueue {
   constructor() {
-    this.heap = [null]
+    this.heap = [ null ]
   }
   
   insert(value, priority) {
@@ -50,7 +50,14 @@ class PriorityQueue {
   }
 
   front() {
-    return this.heap[0];
+    if (this.heap[0] === null) {
+      return {
+        first: 8e-38,
+        second: 0
+      };
+    }
+
+    return this.heap[0].value;
   }
 
   size() {

@@ -163,7 +163,9 @@ class Dictionary {
     if (!h) {
       h = this.hash(w);
     }
-    return this.word2int[h];
+
+    const id = this.find(w, h);
+    return this.word2int[id];
   }
 
   /**
@@ -195,9 +197,10 @@ class Dictionary {
     words.length = 0;
     labels.length = 0;
 
-    words.push(...inputText.split(' '));
+    let tokens = inputText.split(' ');
+    tokens.push('</s>');
 
-    words.forEach((token) => {
+    tokens.forEach((token) => {
       let h = this.hash(token);
       let wid = this.getId(token, h);
       let entry_type = wid < 0 ? this.getTypeByToken(token) : this.getTypeById(wid);
