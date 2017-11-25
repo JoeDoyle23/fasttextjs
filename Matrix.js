@@ -26,11 +26,11 @@ class Matrix {
    * @param {Nunber} i 
    */
   dotRow(vec, i) {
-    let d = 0.0;
+    let d = new Float32Array(1);
     for (let j = 0; j < this.n; j++) {
-      d += this.at(i, j) * vec.data[j];
+      d[0] += this.at(i, j) * vec.data[j];
     }
-    return d;
+    return d[0];
   }
 }
 

@@ -115,8 +115,6 @@ class Model {
     } else {
       this.findKBest(k, heap, hidden, output);
     }
-
-    //std::sort_heap(heap.begin(), heap.end(), comparePairs);
   }
 
   /**
@@ -143,8 +141,6 @@ class Model {
   }
 
   dfs(k, node, score, heap, hidden) {
-    console.log('dfs');
-    
     if (heap.size() == k && score < heap.front().first) {
       return;
     }
@@ -180,10 +176,8 @@ class Model {
    * @param {Vector} output 
    */
   findKBest(k, heap, hidden, output) {
-    console.log('findKBest');
     this.computeOutputSoftmax(hidden, output);
     for (let i = 0; i < this.osz; i++) {
-      console.log(output.data[i]);
       let iLog = Math.log(output.data[i]);
 
       if (heap.size() == k && iLog < heap.front().first) {

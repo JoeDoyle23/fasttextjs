@@ -47,7 +47,6 @@ class FastText {
         this.output.load(this.ftzReader);
       }
 
-      console.log(this.output.data);
       this.model = new Model(this.input, this.output, this.args, 0);
       this.model.quant = this.quant;
       this.model.setQuantizePointer(this.qinput, this.qoutput, this.args.qout);
@@ -86,14 +85,26 @@ class FastText {
 
     this.model.predict(words, k, modelPredictions, hidden, output);
 
-    console.log(modelPredictions.heap);
-    // modelPredictions.forEach((pred) => {
-    //   this.predictions.push({
-    //     a: pred.first,
-    //     label: this.dictionary.getLabel(pred.second)
-    //   });
-    // })
-    
+    //console.log(modelPredictions.heap);
+    let count = numResults;
+    modelPredictions.heap.forEach((pred) => {
+      if (pred === null) {
+        return;
+      }
+
+      if (count === 0 ) {
+        return;
+      }
+      //console.log(pred);
+      this.predictions.push({
+        a: Math.exp(pred.value.first),
+        label: this.dictionary.getLabel(pred.value.second)
+      });
+      count--;
+    })
+
+    console.log(this.predictions);
+
     return this.predictions;
   }
 }

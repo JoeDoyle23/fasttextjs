@@ -19,7 +19,7 @@ class ProductQuantizer {
     this.dsub = ftzReader.readInt32();
     this.lastdsub = ftzReader.readInt32();
 
-    this.centroids = ftzReader.readUInt32TypedArray(this.dim * this.ksub);
+    this.centroids = ftzReader.readFloat32TypedArray(this.dim * this.ksub);
   }
 
   /**

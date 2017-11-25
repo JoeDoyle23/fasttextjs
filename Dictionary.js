@@ -129,7 +129,7 @@ class Dictionary {
           ngram.push(word[j++]);
         }
 
-        if (n >= this.args.minn && !(n == 1 && (i == 0 || j == word.length))) {
+        if (n >= this.args.minn && !(n == 1 && (i === 0 || j === word.length))) {
           let h = this.hash(ngram) % this.args.bucket;
           this.pushHash(ngrams, h);
         }
@@ -194,8 +194,8 @@ class Dictionary {
     let token;
     let ntokens = 0;
 
-    words.length = 0;
-    labels.length = 0;
+    //words.length = 0;
+    //labels.length = 0;
 
     let tokens = inputText.split(' ');
     tokens.push('</s>');
@@ -206,7 +206,6 @@ class Dictionary {
       let entry_type = wid < 0 ? this.getTypeByToken(token) : this.getTypeById(wid);
 
       ntokens++;
-
       if (entry_type == this.entry_type.word) {
         this.addSubwords(words, token, wid);
         word_hashes.push(h);
@@ -274,7 +273,8 @@ class Dictionary {
     for (let i = 0; i < hashes.length; i++) {
       let h = hashes[i];
       for (let j = i + 1; j < hashes.length && j < i + n; j++) {
-        h = h * 116049371 + hashes[j];
+        h *= 116049371;
+        h += hashes[j];
         this.pushHash(line, h % this.args.bucket);
       }
     }

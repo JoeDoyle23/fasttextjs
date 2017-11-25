@@ -62,7 +62,6 @@ class QMatrix {
     if (this.qnorm) {
       norm = this.npq.get_centroids(0, this.norm_codes[t])[0];
     }
-
     this.pq.addcode(x, this.codes, t, norm);
   }
 }

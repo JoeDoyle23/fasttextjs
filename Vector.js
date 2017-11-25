@@ -29,8 +29,7 @@ class Vector {
    */
   mulByMatrix(a, vec) {
     for (let i = 0; i < this.m; i++) {
-      let v = a.dotRow(vec, i);
-      this.data[i] = v;
+      this.data[i] = a.dotRow(vec, i);
     }
   }
   
