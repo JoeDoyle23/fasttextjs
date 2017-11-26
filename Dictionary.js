@@ -194,9 +194,6 @@ class Dictionary {
     let token;
     let ntokens = 0;
 
-    //words.length = 0;
-    //labels.length = 0;
-
     let tokens = inputText.split(' ');
     tokens.push('</s>');
 

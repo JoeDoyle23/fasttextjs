@@ -3,7 +3,7 @@ const Dictionary = require('./Dictionary');
 const Matrix = require('./Matrix');
 const QMatrix = require('./QMatrix');
 const Model = require('./Model');
-const PriorityQueue = require('./PriorityQueue');
+const SortedArray = require('./SortedArray');
 const Vector = require('./Vector');
 const FtzReader = require('./FtzReader');
 
@@ -81,29 +81,16 @@ class FastText {
 
     let hidden = new Vector(this.args.dim);
     let output = new Vector(this.dictionary.nlabels);
-    let modelPredictions = new PriorityQueue();
+    let modelPredictions = new SortedArray();
 
     this.model.predict(words, k, modelPredictions, hidden, output);
 
-    //console.log(modelPredictions.heap);
-    let count = numResults;
-    modelPredictions.heap.forEach((pred) => {
-      if (pred === null) {
-        return;
-      }
-
-      if (count === 0 ) {
-        return;
-      }
-      //console.log(pred);
+    modelPredictions.data.forEach((pred) => {
       this.predictions.push({
-        a: Math.exp(pred.value.first),
-        label: this.dictionary.getLabel(pred.value.second)
+        probability: Math.exp(pred.first),
+        label: this.dictionary.getLabel(pred.second)
       });
-      count--;
     })
-
-    console.log(this.predictions);
 
     return this.predictions;
   }

@@ -136,21 +136,15 @@ class Model {
     hidden.mulByNum(1.0 / input.length);
   }
 
-  comparePairs(left, right) {
-    return left.first > right.first;
-  }
-
   dfs(k, node, score, heap, hidden) {
     if (heap.size() == k && score < heap.front().first) {
       return;
     }
 
     if (tree[node].left == -1 && tree[node].right == -1) {
-      heap.insert({
-        first: score,
-        second: node
-      }, score);
-
+      heap.insert(score, node);
+      heap.sort();
+      
       if (heap.size() > k) {
         heap.remove();
       }
@@ -184,14 +178,13 @@ class Model {
         continue;
       }
 
-      heap.insert({
-        first: iLog,
-        second: i
-      }, iLog);
+      heap.insert(iLog, i);
+      heap.sort();
         
       if (heap.size() > k) {
         heap.remove();
       }
+
     }
   }
 
