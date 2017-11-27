@@ -7,8 +7,8 @@ version of FastText for use in Node.js.
 
 ## FastText
 
-(FastText)[https://fasttext.cc/] is a project out of Facebook Research. The primary
-implimentation can be found at (https://github.com/facebookresearch/fastText)[https://github.com/facebookresearch/fastText]. That is the source code used to create
+[FastText](https://fasttext.cc/) is a project out of Facebook Research. The primary
+implimentation can be found at [https://github.com/facebookresearch/fastText](https://github.com/facebookresearch/fastText). That is the source code used to create
 this version.
 
 ## Purpose of this code
@@ -36,7 +36,13 @@ optimizations and doing things the JavaScript way instead of the C++ way.
 
 This is still in progress, but I'd be curious to hear of other's experiences with it.
 
-##License
+## Limitations
+
+Several of the values stored in the model file are 64-bit integers, so JavaScript limits
+apply (max values of 2^53 - 1). Models that are larger than that will probably fail to
+work correctly.
+
+## License
 
 fasttextJS is BSD-licensed just like the original source. I can only assume that the
-patent clause will also apply to this port.
+patent clause also applies to this port.
