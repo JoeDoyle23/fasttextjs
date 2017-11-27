@@ -42,6 +42,13 @@ Several of the values stored in the model file are 64-bit integers, so JavaScrip
 apply (max values of 2^53 - 1). Models that are larger than that will probably fail to
 work correctly.
 
+Currently this code only loads the "compressed" model format (.ftz). 
+
+## Sample Model
+
+You can find sample models on the FastText website. The one in the `test.js` file is the
+compressed Amazon Review Full which can be found at https://fasttext.cc/docs/en/supervised-models.html#content
+
 ## License
 
 fasttextJS is BSD-licensed just like the original source. I can only assume that the
